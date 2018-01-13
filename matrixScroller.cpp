@@ -56,11 +56,8 @@ void MatrixScroller::draw(RGBMatrix &matrix)
   matrix.show();
   
   position++;
-  Serial.print("position is ");Serial.println(position);
   // check for wrap-around
   if(position >= (message.length()+1)*(CHAR_WIDTH+1)) {
-    Serial.print("wrapping scroller when position is ");Serial.println(position);
-    Serial.print("message length is ");Serial.println(message.length());
     position = 0;
   }
 };

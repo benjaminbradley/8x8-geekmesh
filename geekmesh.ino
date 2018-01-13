@@ -1,6 +1,8 @@
 /** \file
  */
 
+#include <ESP8266WiFi.h>
+#include <ESP8266WiFiMesh.h>
 #include "Badge.h"
 #include "matrixAnimation.h"
 #include "sample-animation-spinner-small.h"
@@ -8,6 +10,32 @@
 #include "matrixScroller.h"
 
 Badge badge;
+
+String handleRequest(String request);
+
+/* Create the mesh node object */
+ESP8266WiFiMesh mesh_node = ESP8266WiFiMesh(ESP.getChipId(), handleRequest);
+
+/**
+ * Callback for when other nodes send you data
+ *
+ * @request The string received from another node in the mesh
+ * @returns The string to send back to the other node
+ */
+String handleRequest(String request)
+{
+  /* Print out received message */
+  Serial.print("received message via mesh: ");
+  Serial.println(request);
+  //TODO: show messages on the LED
+  //MatrixScroller meshscroller(request);
+  //meshscroller.draw();
+
+  /* return a string to send back */
+  char response[60];
+  sprintf(response, "Hello world response from Mesh_Node%d.", ESP.getChipId());
+  return response;
+}
 
 const uint8_t DEMO_WIPE = 0;
 const uint8_t DEMO_ANIMATION = 1;
@@ -29,6 +57,12 @@ void setup()
     badge.begin();
     badge.matrix.setBrightness(100);
     letter_animation.decompress();  // decompress the RLE data so we can pick specific frames
+
+    Serial.print("my chipID is: ");
+    Serial.println(ESP.getChipId());
+    Serial.println("Setting up mesh node...");
+    /* Initialise the mesh node */
+    mesh_node.begin();
 }
 
 void loop()
@@ -39,6 +73,19 @@ void loop()
   if (now - last_draw_millis < update_frequency)
     return;
   last_draw_millis = now;
+
+  /* Accept any incoming connections */
+  mesh_node.acceptRequest();
+
+  if (badge.button_edge())
+  {
+    Serial.println("attempting to send a request via mesh network");
+    /* Scan for other nodes and send them a message */
+    char request[60];
+    sprintf(request, "Hello world request from Mesh_Node%d.", ESP.getChipId());
+    mesh_node.attemptScan(request);
+  }
+
 
   if(cur_demo == DEMO_WIPE) {
     update_frequency = 1000/60; // run the LED wipe at 60KHz
