@@ -2,7 +2,7 @@
  */
 
 #include <ESP8266WiFi.h>
-#include <ESP8266WiFiMesh.h>
+#include "ESP8266WiFiMesh.h"
 #include "Badge.h"
 #include "matrixAnimation.h"
 #include "sample-animation-spinner-small.h"
@@ -13,8 +13,10 @@ Badge badge;
 
 String handleRequest(String request);
 
+uint32_t chip_id = ESP.getChipId();
+
 /* Create the mesh node object */
-ESP8266WiFiMesh mesh_node = ESP8266WiFiMesh(ESP.getChipId(), handleRequest);
+ESP8266WiFiMesh mesh_node = ESP8266WiFiMesh(chip_id, handleRequest);
 
 /**
  * Callback for when other nodes send you data
@@ -33,7 +35,7 @@ String handleRequest(String request)
 
   /* return a string to send back */
   char response[60];
-  sprintf(response, "Hello world response from Mesh_Node%d.", ESP.getChipId());
+  sprintf(response, "Hello world response from Mesh_Node%d.", chip_id);
   return response;
 }
 
@@ -59,7 +61,7 @@ void setup()
     letter_animation.decompress();  // decompress the RLE data so we can pick specific frames
 
     Serial.print("my chipID is: ");
-    Serial.println(ESP.getChipId());
+    Serial.println(chip_id);
     Serial.println("Setting up mesh node...");
     /* Initialise the mesh node */
     mesh_node.begin();
@@ -82,7 +84,7 @@ void loop()
     Serial.println("attempting to send a request via mesh network");
     /* Scan for other nodes and send them a message */
     char request[60];
-    sprintf(request, "Hello world request from Mesh_Node%d.", ESP.getChipId());
+    sprintf(request, "Hello world request from Mesh_Node%d.", chip_id);
     mesh_node.attemptScan(request);
   }
 
